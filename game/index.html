@@ -2,9 +2,43 @@
 <html>
 	<head>
 		<title>LD33 Great guns officially killin it</title>
+		<script src="https://code.createjs.com/createjs-2015.05.21.min.js"></script>
+		<script>
+			function start() {
+				stage = new createjs.Stage("game");
+				circle = new createjs.Shape();
+				circle.graphics.beginFill("red").drawCircle(0, 0, 30);
+				circle.x = 40;
+				circle.y = 40;
+				stage.addChild(circle);
+				stage.update();
+
+				createjs.Ticker.setFPS(30);
+			};
+
+			createjs.Ticker.addEventListener("tick", function() {
+				circle.x += 1;
+				if (circle.x > stage.canvas.width) {
+					circle.x = 0;
+				}
+				stage.update();
+			});
+		</script>
+		<style>
+			#contain {
+				margin: auto;
+				width: 800px;
+			}
+
+			canvas {
+				border: 1px solid black;
+			}
+		</style>
 	</head>
-	<body>
-		<h1>LD33 Setup Time</h1>
-		<div id="game"></div>
+	<body onload="start()">
+		<div id="contain">
+			<h1>LD33 Setup Time</h1>
+			<canvas id="game" width="800" height="600"></canvas>
+		</div>
 	</body>
 </html>
