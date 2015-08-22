@@ -10,7 +10,7 @@ var Resource = function(x, y, type) {
 	this.zvel = 150;
 	this.workleft = 3;
 	this.dibs = null;
-	this.job = true;
+	this.job = 1;
 	this.lastworker = null;
 	this.type = type;
 };
@@ -30,7 +30,7 @@ Resource.prototype.work = function(man, dt) {
 	this.lastworker = man;
 	this.workleft -= dt;
 	if(this.workleft <= 0) {
-		game.removeentity(this);
+		this.destroyed = true;
 		man.carrying = this.type;
 		return true;
 	}
@@ -46,18 +46,96 @@ var TownHall = function() {
 	this.hand.y = -140;
 	this.timer = 1;
 	this.resources = {
-		
+		log: 0
 	};
+	this.constructions = 0;
 };
 TownHall.prototype.update = function(dt) {
 	this.timer -= dt * 0.1;
 	this.hand.rotation = this.timer * -360;
 	if(this.timer < 0) {
 		this.timer = 1;
-		game.entities.push(new Man(0, 100));
+		game.addentity(new Man(0, 100));
+	}
+
+	if(this.resources['log'] >= 3) {
+		this.resources['log'] -= 3;
+		var ring = Math.floor(this.constructions / 5);
+		var ringidx = this.constructions % 5;
+		var factor = 1;
+		if(ring % 2) { factor = -1; }
+		var angle = ringidx * Math.PI * 2 / 5 - factor * Math.PI * 0.5;
+		var radius = 250 * (ring + 1);
+		var p = polar(angle, radius); 
+		console.log(ring, ringidx, angle, radius, p.x, p.y);
+		game.addentity(new Construction(p.x, p.y));
+		this.constructions++;
 	}
 }
 TownHall.prototype.collide = function(worm) {}
+TownHall.prototype.work = function(man, dt) {
+	man.workleft -= dt;
+	if(man.workleft <= 0) {
+		var old = this.resources[man.carrying] || 0;
+		this.resources[man.carrying] = old + 1;
+		man.carrying = null;
+		$("#checkos").html(this.resources);
+		return true;
+	}
+}
+
+var Construction = function(x, y) {
+	this.sprite = game.makesprite(this, "construction");	
+	this.x = x;
+	this.y = y;
+	this.z = 0.01;
+	this.zvel = 0;
+	this.job = 0.5;
+	this.dibs = null;
+	this.workleft = 5;
+};
+Construction.prototype.update = function(dt) {}
+Construction.prototype.collide = function(worm) {}
+Construction.prototype.work = function(man, dt) {
+	this.workleft -= dt;
+	if(this.workleft < 0) {
+		console.log(this);
+		game.addentity(new House(this.x, this.y));
+		this.destroyed = true;
+		return true;
+	}
+}
+
+var House = function(x, y) {
+	this.sprite = game.makesprite(this, "house");	
+	this.x = x;
+	this.y = y;
+	this.z = 0;
+};
+House.prototype.update = function(dt) {}
+House.prototype.collide = function(worm) {}
+
+var Rock = function(x, y) {
+	this.sprite = game.makesprite(this, "rock");	
+	this.x = x;
+	this.y = y;
+	this.z = 0;
+	this.brokentimer = 0;
+};
+Rock.prototype.update = function(dt) {
+	if(this.brokentimer > 0) {
+		this.brokentimer -= dt;
+	}
+};
+Rock.prototype.collide = function(worm) {
+	if(worm.z > 1) {
+		this.destroyed = true;
+		game.addentity(new Resource(this.x, this.y, "stone"));
+	} else if(this.brokentimer <= 0) {
+		worm.speed = 0;
+		this.brokentimer = 1;
+	}
+};
 
 var Tree = function(x, y) {
 	this.sprite = game.makesprite(this, "tree");	
@@ -76,8 +154,8 @@ Tree.prototype.update = function(dt) {
 };
 Tree.prototype.collide = function(worm) {
 	if(worm.z > 1) {
-		game.removeentity(this);
-		game.entities.push(new Resource(this.x, this.y, "log"));
+		this.destroyed = true;
+		game.addentity(new Resource(this.x, this.y, "log"));
 	} else if(this.brokentimer <= 0) {
 		worm.speed = 0;
 		this.brokentimer = 1;
@@ -104,18 +182,51 @@ $(function() {
 	game.stage.update();
 
 	game.entities = [];
+	game.newentities = [];
 	game.worm = new Worm();
-	game.entities.push(game.worm);
+	game.addentity(game.worm);
 
 	game.townhall = new TownHall();
-	game.entities.push(game.townhall);
+	game.addentity(game.townhall);
 
-	for(var i = 0; i < 10; ++i) {
-		game.entities.push(new Tree(Math.random() * MAPW - MAPW*0.5, Math.random() * MAPH - MAPH * 0.5));
-	}
+	var randoms = [];
+	var placerandom = function(amount, cb) {
+		for(var i = 0; i < amount; ++i) {
+			randoms.push(cb);
+		}
+	};
+
+	placerandom(15, function(x, y) {
+		game.addentity(new Tree(x, y));
+	});
+	placerandom(15, function(x, y) {
+		game.addentity(new Rock(x, y));
+	});
+	placerandom(15, function(x, y) {
+		var s = new createjs.Sprite(game.sheet);
+		s.gotoAndStop("dune");
+		s.currentAnimationFrame = Math.floor(Math.random() * 5);
+		s.x = x;
+		s.y = y;
+		s.entity = {x: x, y: y};
+		game.scene.addChild(s);
+	});
+
+	var i = 0;
+	while(randoms.length > 0) {
+		var idx = Math.floor(Math.random() * randoms.length);
+		var cb = randoms.shift();
+		var r = (i+2) * 80;
+		var th = i * Math.PI * 0.6 + Math.random();
+		var x = Math.cos(th) * r;
+		var y = Math.sin(th) * r * 0.75;
+		cb(x, y);
+		i++;
+	};
+
 	for(var i = 0; i < 3; ++i) {
-		game.entities.push(new Man(Math.random() * MAPW - MAPW*0.5, Math.random() * MAPH - MAPH * 0.5));
-	}
+		game.addentity(new Man(-150 + i*150, 150));
+	};
 
 	for(var i = 0; i < 256; ++i) {
 		KEYS[i] = false;
@@ -131,10 +242,10 @@ game.makesprite = function(entity, name) {
 	return sprite;
 };
 
-game.removeentity = function(entity) {
-	var index = game.entities.indexOf(entity);
-	game.entities.splice(index, 1);
-	game.scene.removeChild(entity.sprite);
+game.addentity = function(e) {
+	game.newentities.push(e);
+	e.sprite.x = e.x;
+	e.sprite.y = e.y - e.z;
 };
 
 game.getclosest = function(x, y, pred) {
@@ -166,12 +277,21 @@ $(window).keyup(function(e) {
 
 createjs.Ticker.addEventListener("tick", function() {
 	var dt = 1.0/30;
-	for(var i = 0; i < game.entities.length; ++i) {
-		var e = game.entities[i];
+
+	game.entities = game.entities.concat(game.newentities);
+	game.newentities = [];
+
+	game.entities = game.entities.filter(function(e) {
 		e.update(dt);
 		e.sprite.x = e.x;
 		e.sprite.y = e.y - e.z;
-	}
+		if(e.destroyed) {
+			game.scene.removeChild(e.sprite);
+			return false;
+		} else {
+			return true;
+		}
+	});
 
 	var MAXZOOM = 0.8;
 
@@ -209,4 +329,10 @@ function distancesq(x0, y0, x1, y1) {
 	var dx = x0 - x1;
 	var dy = y0 - y1;
 	return (dx * dx + dy * dy);
+};
+
+function polar(th, r) {
+	var x = Math.cos(th) * r;
+	var y = Math.sin(th) * r;
+	return { x: x, y: y };
 };

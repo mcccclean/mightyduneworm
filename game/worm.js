@@ -125,8 +125,8 @@ BodySegment.prototype.update = function(dt) {
 		//this.sprite.rotation = this.angle * 180 / Math.PI;
 	}
 
-	if(this.oldz <= 0 && this.z > 0 && this.jewel) {
-		game.entities.push(new Resource(this.x, this.y, "gems"));
+	if(this.oldz > 0 && this.z <= 0 && this.jewel) {
+		game.addentity(new Resource(this.x, this.y, "gems"));
 	}
 };
 

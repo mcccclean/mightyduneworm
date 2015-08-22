@@ -44,11 +44,13 @@ var behaviours = {
 		return man.target.work(man, dt);
 	},
 	gohome: function(man, dt) {
-		if(behaviours.pursue(man, dt)) {
-			var old = game.townhall.resources[man.carrying] || 0;
-			game.townhall.resources[man.carrying] = old + 1;
-			man.carrying = null;
-			$("#checker").html(game.townhall.resources);
+		if(distance(man.x, man.y, man.target.x, man.target.y) < 50) {
+			man.workleft = 1;
+			man.sprite.gotoAndPlay("gather");
+			man.target = game.townhall;
+			man.behaviour = behaviours.work;
+		} else {
+			behaviours.pursue(man, dt);
 		}
 	},
 };
@@ -62,6 +64,7 @@ var Man = function(x, y) {
 	this.beginJump();
 	this.behaviour = behaviours.jump;
 	this.thinkingtime = 1;
+	this.workleft = 3;
 	this.target = null;
 	this.alive = true;
 };
@@ -93,8 +96,11 @@ Man.prototype.update = function(dt) {
 };
 
 Man.prototype.die = function() {
-	game.removeentity(this);
+	this.destroyed = true;
 	this.alive = false;
+	if(this.carrying) {
+		game.addentity(new Resource(this.x, this.y, this.carrying));
+	}
 };
 
 Man.prototype.collide = function(worm) {
