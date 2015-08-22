@@ -1,6 +1,8 @@
 import json
 import os
 
+CENTERS = """rumble shadow stone jewel log head body""".split()
+
 def commas(s):
     return tuple([int(x.strip()) for x in s.split(',')])
 
@@ -8,6 +10,7 @@ class Sprite:
 
     def __init__(self, name):
         self.name = name
+        self.basename = name.split("_")[0]
         self.valid = False
         self.data = [0, 0, 0, 0, 0, 50, 50]
         self.idx = None
@@ -21,6 +24,11 @@ class Sprite:
             self.data[0], self.data[1] = val
         elif key == 'size':
             self.data[2], self.data[3] = val
+            self.data[5] = self.data[2] / 2
+            if self.basename in CENTERS:
+                self.data[6] = self.data[3] / 2
+            else:
+                self.data[6] = self.data[3]
 
 def main(infile, outfile):
     sprites = []

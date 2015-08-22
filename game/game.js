@@ -163,6 +163,15 @@ var game = {};
 		}
 	};
 
+	var TownHall = function() {
+		this.x = 0;
+		this.y = 0;
+		this.z = 0;
+		this.sprite = game.makesprite(this, "townhall");
+	};
+	TownHall.prototype.update = function(dt) {}
+	TownHall.prototype.collide = function(worm) {}
+
 	var Tree = function(x, y) {
 		this.sprite = game.makesprite(this, "tree");	
 		this.x = x;
@@ -190,7 +199,12 @@ var game = {};
 
 	$(function() {
 		game.stage = new createjs.Stage("game");
+		game.stage.x = game.stage.canvas.width / 2;
+		game.stage.y = game.stage.canvas.height / 2;
 		
+		var MAPW = 1600;
+		var MAPH = 1200;
+
 		var group = new createjs.Container();
 		group.scaleX = 0.5;
 		group.scaleY = 0.5;
@@ -202,12 +216,14 @@ var game = {};
 		game.stage.update();
 
 		game.entities = [];
-		var worm = new Worm();
-		game.entities.push(worm);
+		game.worm = new Worm();
+		game.entities.push(game.worm);
+
+		game.entities.push(new TownHall());
 
 		for(var i = 0; i < 10; ++i) {
-			game.entities.push(new Man(Math.random() * 1600, Math.random() * 1200));
-			game.entities.push(new Tree(Math.random() * 1600, Math.random() * 1200));
+			game.entities.push(new Man(Math.random() * MAPW - MAPW*0.5, Math.random() * MAPH - MAPH * 0.5));
+			game.entities.push(new Tree(Math.random() * MAPW - MAPW*0.5, Math.random() * MAPH - MAPH * 0.5));
 		}
 
 		for(var i = 0; i < 256; ++i) {
@@ -247,6 +263,15 @@ var game = {};
 			e.sprite.x = e.x;
 			e.sprite.y = e.y - e.z;
 		}
+
+		var dx = game.worm.x;
+		var dy = game.worm.y;
+		var distFromTown = 300 / Math.sqrt(dx * dx + dy * dy);
+		if(distFromTown > 0.5) {
+			distFromTown = 0.5;
+		}
+		game.scene.scaleX = game.scene.scaleX * 0.9 + distFromTown * 0.1;
+		game.scene.scaleY = game.scene.scaleY * 0.9 + distFromTown * 0.1;
 
 		game.scene.sortChildren(function(a, b) {
 			return a.entity.y - b.entity.y;
