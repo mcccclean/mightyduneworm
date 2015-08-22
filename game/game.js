@@ -46,11 +46,11 @@ var game = {};
 		}
 
 		if(KEYS[SPACE]) {
-			this.zvel = 500;
+			this.zvel = 300;
 		}
 
 		this.z += this.zvel * dt;
-		this.zvel -= 1000 * dt;
+		this.zvel -= 850 * dt;
 		if(this.z < 0) {
 			this.z = 0;
 			this.zvel = 0;
