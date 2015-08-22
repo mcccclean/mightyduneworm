@@ -29,6 +29,9 @@ var game = {};
 	var proto = Worm.prototype;
 	proto.update = function(dt) {
 		var TURN = 4;
+		if(this.z > 1)
+			TURN = 0.5;
+
 		if(KEYS[LEFT])
 			this.angle -= dt * TURN;
 		else if(KEYS[RIGHT])
