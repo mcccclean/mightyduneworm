@@ -9,7 +9,7 @@ class Sprite:
     def __init__(self, name):
         self.name = name
         self.valid = False
-        self.data = [0] * 7
+        self.data = [0, 0, 0, 0, 0, 50, 50]
         self.idx = None
 
     def addline(self, l):
@@ -35,15 +35,19 @@ def main(infile, outfile):
 
     frames = []
     animations = {}
-    for i, s in enumerate([x for x in sprites if x.valid]):
+    for i, s in enumerate(sorted([x for x in sprites if x.valid], key=lambda s: s.name)):
         s.idx = i
         frames.append(s.data)
-        animations[s.name] = { 'frames': [s.idx] }
+        name = s.name.split("_")[0]
+        if name not in animations:
+            animations[name] = { 'frames': [s.idx] }
+        else:
+            animations[name]['frames'].append(s.idx)
 
     finaldata = dict(images=['sprites.png'], frames=frames, animations=animations)
     with open(outfile, "w") as f:
         f.write("SPRITES = ")
-        json.dump(finaldata, f)
+        json.dump(finaldata, f, indent=4)
         f.write(";")
 
 if __name__ == "__main__":

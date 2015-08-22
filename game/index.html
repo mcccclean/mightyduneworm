@@ -2,29 +2,10 @@
 <html>
 	<head>
 		<title>LD33 Great guns officially killin it</title>
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 		<script src="https://code.createjs.com/createjs-2015.05.21.min.js"></script>
 		<script src="sprites.js"></script>
-		<script>
-			function start() {
-				stage = new createjs.Stage("game");
-				sheet = new createjs.SpriteSheet(SPRITES);
-				sprite = new createjs.Sprite(sheet, "griff");
-				sprite.x = 40;
-				sprite.y = 40;
-				stage.addChild(sprite);
-				stage.update();
-
-				createjs.Ticker.setFPS(30);
-			};
-
-			createjs.Ticker.addEventListener("tick", function() {
-				sprite.x += 1;
-				if (sprite.x > stage.canvas.width) {
-					sprite.x = 0;
-				}
-				stage.update();
-			});
-		</script>
+		<script src="game.js"></script> 
 		<style>
 			#contain {
 				margin: auto;
@@ -33,13 +14,17 @@
 
 			canvas {
 				border: 1px solid black;
+				background-color: #dec471;
 			}
 		</style>
 	</head>
-	<body onload="start()">
+	<body>
 		<div id="contain">
-			<h1>LD33 Setup Time</h1>
+			<h1>LD33 You Are the Monster</h1>
 			<canvas id="game" width="800" height="600"></canvas>
+		</div>
+		<div id="checkos">
+			
 		</div>
 	</body>
 </html>
