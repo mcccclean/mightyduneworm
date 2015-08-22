@@ -142,6 +142,7 @@ var game = {};
 		this.z = 0;
 	}
 	Jewels.prototype.update = function(dt) {
+
 	};
 	Jewels.prototype.collide = function(worm) {
 		
@@ -154,9 +155,12 @@ var game = {};
 		this.z = 0;
 	};
 	Man.prototype.update = function(dt) {
+
 	};
 	Man.prototype.collide = function(worm) {
-		
+		if(worm.z > 1) {
+			game.removeentity(this);
+		}
 	};
 
 	var Tree = function(x, y) {
@@ -218,6 +222,12 @@ var game = {};
 		sprite.entity = entity;
 		game.scene.addChildAt(sprite, 0);
 		return sprite;
+	};
+
+	game.removeentity = function(entity) {
+		var index = game.entities.indexOf(entity);
+		game.entities.splice(index, 1);
+		game.scene.removeChild(entity.sprite);
 	};
 
 	KEYS = {};
