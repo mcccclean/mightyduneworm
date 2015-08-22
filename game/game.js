@@ -37,15 +37,19 @@ var game = {};
 		else if(KEYS[RIGHT])
 			this.angle += dt * TURN;
 
-		this.speed = 500;
+		if(this.speed < 500) {
+			this.speed += 100 * dt;
+		} else if(this.speed > 500) {
+			this.speed = 500;
+		}
 		this.x += dt * Math.cos(this.angle)*this.speed;
-		this.y += dt * Math.sin(this.angle)*this.speed;
+		this.y += dt * Math.sin(this.angle)*this.speed*0.75;
 
 		for(var i = 0; i < this.follows.length; ++i) {
 			this.follows[i].update(dt);
 		}
 
-		if(KEYS[SPACE]) {
+		if(KEYS[SPACE] && this.z == 0) {
 			this.zvel = 300;
 		}
 
@@ -62,7 +66,7 @@ var game = {};
 				var dx = this.x - e.x;
 				var dy = this.y - e.y;
 				if(dx * dx + dy * dy < 2000) {
-					
+					e.collide(this);
 				}
 			}
 		}
@@ -129,15 +133,32 @@ var game = {};
 	};
 	Man.prototype.update = function(dt) {
 	};
+	Man.prototype.collide = function(worm) {
+		
+	};
 
 	var Tree = function(x, y) {
 		this.sprite = game.makesprite(this, "tree");	
 		this.x = x;
 		this.y = y;
 		this.z = 0;
+		this.brokentimer = 0;
 	};
 	Tree.prototype.update = function(dt) {
-
+		if(this.brokentimer > 0) {
+			this.brokentimer -= dt;
+			if(this.brokentimer < 0) {
+				this.sprite.gotoAndPlay("tree");
+			}
+		}
+	};
+	Tree.prototype.collide = function(worm) {
+		console.log(worm, worm.z, this.brokentimer);
+		if(worm.z == 0 && this.brokentimer <= 0) {
+			worm.speed = 0;
+			this.brokentimer = 1;
+			this.sprite.gotoAndPlay("treebroken");
+		}
 	};
 
 
