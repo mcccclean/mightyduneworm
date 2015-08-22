@@ -16,7 +16,7 @@ var game = {};
 		this.follows = [];
 		var lastfollow = this;
 		for(var i = 0; i < 8; ++i) {
-			var newfollow = new BodySegment(lastfollow);
+			var newfollow = new BodySegment(lastfollow, i==7);
 			this.follows.push(newfollow);
 			lastfollow = newfollow;
 		}
@@ -84,8 +84,13 @@ var game = {};
 		}
 	};
 
-	var BodySegment = function(follow) {
+	var BodySegment = function(follow, jewel) {
 		this.follow = follow;
+		this.jewel = jewel;
+		this.abovegroundanimation = "body";
+		if(jewel) {
+			this.abovegroundanimation = "jewel";
+		}
 		this.sprite = game.makesprite(this, "rumble");
 		this.shadow = game.makesprite(this, "shadow");
 		this.x = follow.x;
@@ -98,6 +103,7 @@ var game = {};
 	BodySegment.prototype.update = function(dt) {
 		var follow = this.follow;
 		this.followframes.push([follow.x, follow.y, follow.z, follow.rotation]);
+		this.oldz = this.z;
 		if(this.followframes.length > 3) {
 			var o = this.followframes.shift();
 			this.x = o[0];
@@ -115,14 +121,30 @@ var game = {};
 			this.sprite.rotation = 0;
 			this.shadow.visible = false;
 		} else {
-			if(this.sprite.currentAnimation != "body") {
-				this.sprite.gotoAndPlay("body");
+			if(this.sprite.currentAnimation != this.abovegroundanimation) {
+				this.sprite.gotoAndPlay(this.abovegroundanimation);
 			}
 			this.shadow.visible = true;
 			this.shadow.x = this.x;
 			this.shadow.y = this.y;
 			//this.sprite.rotation = this.angle * 180 / Math.PI;
 		}
+
+		if(this.oldz <= 0 && this.z > 0 && this.jewel) {
+			game.entities.push(new Jewels(this.x, this.y));
+		}
+	};
+
+	var Jewels = function(x, y) {
+		this.sprite = game.makesprite(this, "gems");	
+		this.x = x;
+		this.y = y;
+		this.z = 0;
+	}
+	Jewels.prototype.update = function(dt) {
+	};
+	Jewels.prototype.collide = function(worm) {
+		
 	};
 
 	var Man = function(x, y) {
