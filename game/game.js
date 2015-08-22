@@ -2,20 +2,39 @@ var start;
 
 var game = {};
 
-var Jewels = function(x, y) {
-	this.sprite = game.makesprite(this, "gems");	
+var Resource = function(x, y, type) {
+	this.sprite = game.makesprite(this, type);
 	this.x = x;
 	this.y = y;
 	this.z = 0;
+	this.zvel = 150;
+	this.workleft = 3;
 	this.dibs = null;
-	this.type = "jewels";
+	this.job = true;
+	this.lastworker = null;
+	this.type = type;
+};
+Resource.prototype.update = function(dt) { 
+	this.z += this.zvel * dt;
+	this.zvel -= 850 * dt;
+	if(this.z < 0) {
+		this.z = 0;
+	}
 }
-Jewels.prototype.update = function(dt) {
+Resource.prototype.collide = function(worm) { }
 
-};
-Jewels.prototype.collide = function(worm) {
-
-};
+Resource.prototype.work = function(man, dt) {
+	if(man != this.lastworker) {
+		this.workleft = 3;
+	}
+	this.lastworker = man;
+	this.workleft -= dt;
+	if(this.workleft <= 0) {
+		game.removeentity(this);
+		man.carrying = this.type;
+		return true;
+	}
+}
 
 var TownHall = function() {
 	this.x = 0;
@@ -26,6 +45,9 @@ var TownHall = function() {
 	this.hand.x = -10;
 	this.hand.y = -140;
 	this.timer = 1;
+	this.resources = {
+		
+	};
 };
 TownHall.prototype.update = function(dt) {
 	this.timer -= dt * 0.1;
@@ -53,7 +75,10 @@ Tree.prototype.update = function(dt) {
 	}
 };
 Tree.prototype.collide = function(worm) {
-	if(worm.z == 0 && this.brokentimer <= 0) {
+	if(worm.z > 1) {
+		game.removeentity(this);
+		game.entities.push(new Resource(this.x, this.y, "log"));
+	} else if(this.brokentimer <= 0) {
 		worm.speed = 0;
 		this.brokentimer = 1;
 		this.sprite.gotoAndPlay("treebroken");
@@ -82,7 +107,8 @@ $(function() {
 	game.worm = new Worm();
 	game.entities.push(game.worm);
 
-	game.entities.push(new TownHall());
+	game.townhall = new TownHall();
+	game.entities.push(game.townhall);
 
 	for(var i = 0; i < 10; ++i) {
 		game.entities.push(new Tree(Math.random() * MAPW - MAPW*0.5, Math.random() * MAPH - MAPH * 0.5));

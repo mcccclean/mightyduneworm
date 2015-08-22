@@ -126,7 +126,7 @@ BodySegment.prototype.update = function(dt) {
 	}
 
 	if(this.oldz <= 0 && this.z > 0 && this.jewel) {
-		game.entities.push(new Jewels(this.x, this.y));
+		game.entities.push(new Resource(this.x, this.y, "gems"));
 	}
 };
 
