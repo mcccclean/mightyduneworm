@@ -65,8 +65,8 @@ $(function() {
 	game.stage.x = game.stage.canvas.width / 2;
 	game.stage.y = game.stage.canvas.height / 2;
 
-	var MAPW = 1600;
-	var MAPH = 1200;
+	var MAPW = game.stage.canvas.width * 2;
+	var MAPH = game.stage.canvas.height * 2;
 
 	var group = new createjs.Container();
 	group.scaleX = 0.5;
@@ -147,14 +147,16 @@ createjs.Ticker.addEventListener("tick", function() {
 		e.sprite.y = e.y - e.z;
 	}
 
+	var MAXZOOM = 0.8;
+
 	var dx = game.worm.x;
 	var dy = game.worm.y;
 	var distFromTown = 300 / distance(0, 0, game.worm.x, game.worm.y);
-	if(distFromTown > 0.5) {
-		distFromTown = 0.5;
+	if(distFromTown > MAXZOOM) {
+		distFromTown = MAXZOOM;
 	}
-	game.scene.scaleX = game.scene.scaleX * 0.9 + distFromTown * 0.1;
-	game.scene.scaleY = game.scene.scaleY * 0.9 + distFromTown * 0.1;
+	game.scene.scaleX = game.scene.scaleX * 0.95 + distFromTown * 0.05;
+	game.scene.scaleY = game.scene.scaleY * 0.95 + distFromTown * 0.05;
 	game.scene.x = game.worm.x * -0.25;
 	game.scene.y = game.worm.y * -0.25;
 
