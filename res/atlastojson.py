@@ -1,7 +1,7 @@
 import json
 import os
 
-CENTERS = """rumble shadow stone jewel log head body""".split()
+CENTERS = """rumble shadow stone jewel gems log head body""".split()
 
 def commas(s):
     return tuple([int(x.strip()) for x in s.split(',')])
@@ -29,6 +29,8 @@ class Sprite:
                 self.data[6] = self.data[3] / 2
             else:
                 self.data[6] = self.data[3]
+        elif key == 'index':
+            self.idx = int(val)
 
 def main(infile, outfile):
     sprites = []
@@ -43,12 +45,12 @@ def main(infile, outfile):
 
     frames = []
     animations = {}
-    for i, s in enumerate(sorted([x for x in sprites if x.valid], key=lambda s: s.name)):
+    for i, s in enumerate(sorted([x for x in sprites if x.valid], key=lambda s: "{}_{}".format(s.name, s.idx))):
         s.idx = i
         frames.append(s.data)
         name = s.name.split("_")[0]
         if name not in animations:
-            animations[name] = { 'frames': [s.idx] }
+            animations[name] = { 'frames': [s.idx], 'speed': 0.25 }
         else:
             animations[name]['frames'].append(s.idx)
 

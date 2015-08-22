@@ -7,6 +7,8 @@ var Jewels = function(x, y) {
 	this.x = x;
 	this.y = y;
 	this.z = 0;
+	this.dibs = null;
+	this.type = "jewels";
 }
 Jewels.prototype.update = function(dt) {
 
@@ -51,7 +53,6 @@ Tree.prototype.update = function(dt) {
 	}
 };
 Tree.prototype.collide = function(worm) {
-	console.log(worm, worm.z, this.brokentimer);
 	if(worm.z == 0 && this.brokentimer <= 0) {
 		worm.speed = 0;
 		this.brokentimer = 1;
@@ -84,8 +85,10 @@ $(function() {
 	game.entities.push(new TownHall());
 
 	for(var i = 0; i < 10; ++i) {
-		game.entities.push(new Man(Math.random() * MAPW - MAPW*0.5, Math.random() * MAPH - MAPH * 0.5));
 		game.entities.push(new Tree(Math.random() * MAPW - MAPW*0.5, Math.random() * MAPH - MAPH * 0.5));
+	}
+	for(var i = 0; i < 3; ++i) {
+		game.entities.push(new Man(Math.random() * MAPW - MAPW*0.5, Math.random() * MAPH - MAPH * 0.5));
 	}
 
 	for(var i = 0; i < 256; ++i) {
@@ -108,6 +111,24 @@ game.removeentity = function(entity) {
 	game.scene.removeChild(entity.sprite);
 };
 
+game.getclosest = function(x, y, pred) {
+	var best = 10000000;
+	var candidate = null;
+	for(var i = 0; i < game.entities.length; ++i) {
+		var e = game.entities[i];
+		if(pred(e)) {
+			var dx = e.x - x;
+			var dy = e.y - y;
+			var dist = dx * dx + dy * dy;
+			if(dist < best) {
+				candidate = e;
+				best = dist;
+			}
+		}
+	}
+	return candidate;
+};
+
 KEYS = {};
 $(window).keydown(function(e) {
 	KEYS[e.keyCode] = true;
@@ -128,7 +149,7 @@ createjs.Ticker.addEventListener("tick", function() {
 
 	var dx = game.worm.x;
 	var dy = game.worm.y;
-	var distFromTown = 300 / Math.sqrt(dx * dx + dy * dy);
+	var distFromTown = 300 / distance(0, 0, game.worm.x, game.worm.y);
 	if(distFromTown > 0.5) {
 		distFromTown = 0.5;
 	}
@@ -149,3 +170,15 @@ createjs.Ticker.addEventListener("tick", function() {
 	game.stage.update();
 });
 
+
+function distance(x0, y0, x1, y1) {
+	var dx = x0 - x1;
+	var dy = y0 - y1;
+	return Math.sqrt(dx * dx + dy * dy);
+};
+
+function distancesq(x0, y0, x1, y1) {
+	var dx = x0 - x1;
+	var dy = y0 - y1;
+	return (dx * dx + dy * dy);
+};
