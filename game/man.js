@@ -53,6 +53,12 @@ var behaviours = {
 			behaviours.pursue(man, dt);
 		}
 	},
+	bored: function(man, dt) {
+		man.boredtimer -= dt;
+		if(man.boredtimer < 0) {
+			man.think();
+		}
+	}
 };
 
 var Man = function(x, y) {
@@ -67,14 +73,16 @@ var Man = function(x, y) {
 	this.workleft = 3;
 	this.target = null;
 	this.alive = true;
+	this.boredtimer = 3;
+	game.mancount += 1;
 };
 
-Man.prototype.isValidTarget = function(t) {
+Man.prototype.getTargetPriority = function(t) {
 	if(t && t.job) {
 		if(t.dibs && t.dibs.alive) {
-			return t.dibs == this;
+			return (t.dibs == this) * t.job;
 		} else {
-			return true;
+			return t.job;
 		}
 	}
 	return false;
@@ -98,6 +106,7 @@ Man.prototype.update = function(dt) {
 Man.prototype.die = function() {
 	this.destroyed = true;
 	this.alive = false;
+	game.mancount -= 1;
 	if(this.carrying) {
 		game.addentity(new Resource(this.x, this.y, this.carrying));
 	}
@@ -155,14 +164,23 @@ Man.prototype.think = function() {
 	var me = this;
 	if(!this.carrying) {
 		var closest = game.getclosest(this.x, this.y, function(e) {
-			return me.isValidTarget(e);
+			return me.getTargetPriority(e);
 		});
 		if(closest) {
+			this.boredtimer = 5;
 			var dist = distancesq(this.x, this.y, closest.x, closest.y);
 			if(dist < 100) {
 				this.work(closest);
 			} else {
 				this.pursue(closest);
+			}
+		} else {
+			if(this.boredtimer > 0) {
+				this.behaviour = behaviours.bored;
+				this.sprite.gotoAndPlay("dying");
+			} else {
+				this.die();
+				game.addentity(new Resource(this.x, this.y, "skull"));
 			}
 		}
 	} else {

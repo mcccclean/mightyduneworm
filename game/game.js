@@ -45,16 +45,18 @@ var TownHall = function() {
 	this.hand.x = -10;
 	this.hand.y = -140;
 	this.timer = 1;
+	this.timermax = 1;
 	this.resources = {
 		log: 0
 	};
 	this.constructions = 0;
 };
 TownHall.prototype.update = function(dt) {
-	this.timer -= dt * 0.1;
-	this.hand.rotation = this.timer * -360;
+	this.timer -= dt * 0.2;
+	this.hand.rotation = (this.timer/this.timermax) * -360;
 	if(this.timer < 0) {
-		this.timer = 1;
+		this.timermax = Math.sqrt(game.mancount + 2);
+		this.timer = this.timermax;
 		game.addentity(new Man(0, 100));
 	}
 
@@ -144,6 +146,10 @@ var Tree = function(x, y) {
 	this.z = 0;
 	this.brokentimer = 0;
 };
+Tree.prototype.topple = function() {
+	this.brokentimer = 1;
+	this.sprite.gotoAndPlay("treebroken");
+};
 Tree.prototype.update = function(dt) {
 	if(this.brokentimer > 0) {
 		this.brokentimer -= dt;
@@ -158,10 +164,48 @@ Tree.prototype.collide = function(worm) {
 		game.addentity(new Resource(this.x, this.y, "log"));
 	} else if(this.brokentimer <= 0) {
 		worm.speed = 0;
-		this.brokentimer = 1;
-		this.sprite.gotoAndPlay("treebroken");
+		this.topple();
 	}
 };
+
+var Sapling = function(x, y) {
+	this.sprite = game.makesprite(this, "sapling");
+	this.x = x;
+	this.y = y;
+	this.z = 0;
+	this.growthtimer = 3 + Math.random() * 2;
+};
+Sapling.prototype.update = function(dt) {
+	this.growthtimer -= dt;
+	if(this.growthtimer < 0) {
+		this.destroyed = true;
+		var t = new Tree(this.x, this.y);
+		game.addentity(t);
+		t.topple();
+	}
+};
+Sapling.prototype.collide = function(worm) {
+	this.destroyed = true;
+};
+
+var Seed = function(x, y) {
+	this.sprite = game.makesprite(this, "seed");
+	this.x = x;
+	this.y = y;
+	this.z = 0;
+	this.workremaining = 1;
+	this.job = 20;
+};
+Seed.prototype.update = function(dt) {}
+Seed.prototype.collide = function(worm) {}
+Seed.prototype.work = function(man, dt) {
+	this.workremaining -= dt;
+	if(this.workremaining < 0) {
+		this.destroyed = true;
+		game.addentity(new Sapling(this.x, this.y));
+		return true;
+	}
+}
 
 $(function() {
 	game.stage = new createjs.Stage("game");
@@ -183,6 +227,7 @@ $(function() {
 
 	game.entities = [];
 	game.newentities = [];
+	game.mancount = 0;
 	game.worm = new Worm();
 	game.addentity(game.worm);
 
@@ -253,10 +298,11 @@ game.getclosest = function(x, y, pred) {
 	var candidate = null;
 	for(var i = 0; i < game.entities.length; ++i) {
 		var e = game.entities[i];
-		if(pred(e)) {
+		var priority = pred(e);
+		if(priority > 0) {
 			var dx = e.x - x;
 			var dy = e.y - y;
-			var dist = dx * dx + dy * dy;
+			var dist = (dx * dx + dy * dy) * priority;
 			if(dist < best) {
 				candidate = e;
 				best = dist;
