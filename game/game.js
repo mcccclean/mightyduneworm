@@ -445,7 +445,8 @@ function start() {
 	game.paused = true;
 
 	// INPUT HANDLING
-	document.onkeydown = function(e) {
+	var target = window.parent || window;
+	target.onkeydown = function(e) {
 		console.log('e');
 		if(game.endgametime > 0) {
 			if(e.keyCode == 32 && game.endgametime > 3) {
@@ -468,7 +469,7 @@ function start() {
 		}
 	};
 
-	document.onkeyup = function(e) {
+	target.onkeyup = function(e) {
 		KEYS[e.keyCode] = false;
 	};
 
