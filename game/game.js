@@ -32,6 +32,7 @@ Resource.prototype.work = function(man, dt) {
 	if(this.workleft <= 0) {
 		this.destroyed = true;
 		man.carrying = this.type;
+		playSound("pickup");
 		return true;
 	}
 }
@@ -93,6 +94,7 @@ TownHall.prototype.update = function(dt) {
 		this.timermax = Math.sqrt(game.mancount + 2);
 		this.timer = this.timermax;
 		game.addentity(new Man(0, 100));
+		playSound("born");
 	}
 
 	var BUILDINGS = {
@@ -158,7 +160,7 @@ Construction.prototype.collide = function(worm) {}
 Construction.prototype.work = function(man, dt) {
 	this.workleft -= dt;
 	if(this.workleft < 0) {
-		console.log(this);
+		playSound("working");
 		game.addentity(new House(this.x, this.y, this.type));
 		this.destroyed = true;
 		return true;
@@ -190,6 +192,7 @@ Rock.prototype.collide = function(worm) {
 	if(worm.z > 1) {
 		this.destroyed = true;
 		game.addentity(new Resource(this.x, this.y, "stone"));
+		playSound("resource");
 	} else if(this.brokentimer <= 0) {
 		worm.recoil(this.x, this.y);
 		this.brokentimer = 1;
@@ -219,6 +222,7 @@ Tree.prototype.collide = function(worm) {
 	if(worm.z > 1) {
 		this.destroyed = true;
 		game.addentity(new Resource(this.x, this.y, "log"));
+		playSound("resource");
 	} else if(this.brokentimer <= 0) {
 		worm.recoil(this.x, this.y);
 		this.topple();
@@ -236,6 +240,7 @@ Sapling.prototype.update = function(dt) {
 	this.growthtimer -= dt;
 	if(this.growthtimer < 0) {
 		this.destroyed = true;
+		playSound("treegrow2");
 		var t = new Tree(this.x, this.y);
 		game.addentity(t);
 		t.topple();
@@ -243,6 +248,7 @@ Sapling.prototype.update = function(dt) {
 };
 Sapling.prototype.collide = function(worm) {
 	this.destroyed = true;
+	playSound("deadsapling");
 };
 
 var Seed = function(x, y) {
@@ -251,7 +257,7 @@ var Seed = function(x, y) {
 	this.y = y;
 	this.z = 0;
 	this.workremaining = 1;
-	this.job = 20;
+	this.job = 2;
 };
 Seed.prototype.update = function(dt) {}
 Seed.prototype.collide = function(worm) {}
@@ -260,11 +266,43 @@ Seed.prototype.work = function(man, dt) {
 	if(this.workremaining < 0) {
 		this.destroyed = true;
 		game.addentity(new Sapling(this.x, this.y));
+		playSound("treegrow");
 		return true;
 	}
 }
 
+function loadSounds() {
+	var ext = ".wav";
+	var reg = function(name) {
+		createjs.Sound.registerSound("sfx/" + name + ext, name);
+	};
+	reg("jump");
+	reg("land");
+	reg("obstacle");
+	reg("born");
+	reg("eaten");
+	reg("resource");
+	reg("scream");
+	reg("bored");
+	reg("boreddeath");
+	reg("working");
+	reg("treegrow");
+	reg("treegrow2");
+	reg("treegrow3");
+	reg("pickup");
+	reg("deadsapling");
+	reg("pause");
+	reg("unpause");
+};
+
+function playSound(name) {
+	createjs.Sound.play(name);
+};
+
 $(function() {
+	loadSounds();
+
+	game.paused = true;
 	game.stage = new createjs.Stage("game");
 	game.stage.x = game.stage.canvas.width / 2;
 	game.stage.y = game.stage.canvas.height / 2;
@@ -286,11 +324,35 @@ $(function() {
 	resources.scaleY = 0.5;
 	game.stage.addChild(resources);
 
+	var pausescreen = new createjs.Container();
+	game.stage.addChild(pausescreen);
+	var dark = new createjs.Bitmap("dark.png");
+	dark.x = -1024*0.5;
+	dark.y = -113;
+	dark.scaleX = 100;
+	dark.scaleY = 30;
+	pausescreen.addChild(dark);
+	var longline = new createjs.Bitmap("longline.png");
+	longline.x = 1024 * -0.5;
+	longline.y = 120;
+	pausescreen.addChild(longline);
+	var longline2 = new createjs.Bitmap("longline.png");
+	longline2.x = 1024 * -0.5;
+	longline2.y = -120;
+	pausescreen.addChild(longline2);
+	var instructions = new createjs.Bitmap("instructions.png");
+	instructions.x = 291 * -0.5;
+	instructions.y = -30;
+	pausescreen.addChild(instructions);
+	var logo = new createjs.Bitmap("title.png");
+	logo.x = -400;
+	logo.y = -200;
+	pausescreen.addChild(logo);
+	game.pausescreen = pausescreen;
+
 	game.sheet = new createjs.SpriteSheet(SPRITES);
 
 	resources.addChild(new createjs.Sprite(game.sheet, "log"));
-
-	game.stage.update();
 
 	game.entities = [];
 	game.newentities = [];
@@ -377,7 +439,18 @@ game.getclosest = function(x, y, pred) {
 
 KEYS = {};
 $(window).keydown(function(e) {
-	KEYS[e.keyCode] = true;
+	if(game.paused) {
+		if(e.keyCode == 32) {
+			game.paused = false;
+		}
+	} else {
+		KEYS[e.keyCode] = true;
+	}
+
+	if(e.keyCode == 27) {
+		if(!game.paused) { playSound("pause"); }
+		game.paused = !game.paused;
+	}
 });
 $(window).keyup(function(e) {
 	KEYS[e.keyCode] = false;
@@ -385,7 +458,16 @@ $(window).keyup(function(e) {
 
 createjs.Ticker.addEventListener("tick", function() {
 	var dt = 1.0/30;
+	game.pausescreen.visible = game.paused;
+	if(game.paused) {
+		
+	} else {
+		game.update(dt);
+	}
+	game.stage.update();
+});
 
+game.update = function(dt) {
 	game.entities = game.entities.concat(game.newentities);
 	game.newentities = [];
 
@@ -423,8 +505,7 @@ createjs.Ticker.addEventListener("tick", function() {
 		}
 	});
 
-	game.stage.update();
-});
+};
 
 
 function distance(x0, y0, x1, y1) {

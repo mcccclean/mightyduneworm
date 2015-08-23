@@ -66,7 +66,7 @@ var Man = function(x, y) {
 	this.x = x;
 	this.y = y;
 	this.z = 0;
-	this.speed = 100;
+	this.speed = 120 + Math.random() * 30;
 	this.beginJump();
 	this.behaviour = behaviours.jump;
 	this.thinkingtime = 1;
@@ -110,11 +110,13 @@ Man.prototype.die = function() {
 	if(this.carrying) {
 		game.addentity(new Resource(this.x, this.y, this.carrying));
 	}
+	game.addentity(new Resource(this.x, this.y, "skull"));
 };
 
 Man.prototype.collide = function(worm) {
 	if(worm.z > 1) {
 		this.die();
+		playSound("eaten");
 	}
 };
 
@@ -136,6 +138,7 @@ Man.prototype.checkflee = function() {
 					this.target.dibs = null;
 				}
 				this.behaviour = behaviours.flee;
+				playSound("scream");
 			}
 		}
 	}
@@ -178,9 +181,10 @@ Man.prototype.think = function() {
 			if(this.boredtimer > 0) {
 				this.behaviour = behaviours.bored;
 				this.sprite.gotoAndPlay("dying");
+				playSound("bored");
 			} else {
 				this.die();
-				game.addentity(new Resource(this.x, this.y, "skull"));
+				playSound("boreddeath");
 			}
 		}
 	} else {

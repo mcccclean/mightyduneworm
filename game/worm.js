@@ -4,13 +4,15 @@ var RIGHT = 39;
 var SPACE = 32;
 
 var Worm = function() {
-	this.angle = 0;
-	this.sprite = game.makesprite(this, "head");
-	this.x = 100;
-	this.y = 100;
+	this.angle = Math.PI * 0.5;
+	this.x = 0;
+	this.y = 200;
 	this.z = 0;
-	this.speed = 200;
+	this.speed = 100;
 	this.zvel = 0;
+	this.sprite = game.makesprite(this, "rumble");
+	this.sprite.x = this.x;
+	this.sprite.y = this.y;
 
 	this.follows = [];
 	var lastfollow = this;
@@ -69,11 +71,13 @@ proto.update = function(dt) {
 	if(this.z < 1) {
 		if(this.sprite.currentAnimation != "rumble") {
 			this.sprite.gotoAndPlay("rumble");
+			playSound("land");
 		}
 		this.sprite.rotation = 0;
 	} else {
 		if(this.sprite.currentAnimation != "head") {
 			this.sprite.gotoAndPlay("head");
+			playSound("jump");
 		}
 		this.sprite.rotation = this.angle * 180 / Math.PI;
 	}
@@ -85,6 +89,7 @@ proto.recoil = function(srcx, srcy) {
 	var dx = this.x - srcx;
 	var dy = this.y - srcy;
 	this.angle = Math.atan2(dy, dx);
+	playSound("obstacle");
 };
 
 var BodySegment = function(follow, jewel) {
@@ -96,9 +101,12 @@ var BodySegment = function(follow, jewel) {
 	}
 	this.sprite = game.makesprite(this, "rumble");
 	this.shadow = game.makesprite(this, "shadow");
+	this.shadow.visible = false;
 	this.x = follow.x;
-	this.y = follow.y;
+	this.y = follow.y - 10;
 	this.z = follow.z;
+	this.sprite.x = this.x;
+	this.sprite.y = this.y;
 	this.rotation = follow.rotation;
 	this.followframes = [];
 	this.followframes.push([follow.x, follow.y, follow.z, follow.rotation]);
