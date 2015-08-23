@@ -15,20 +15,48 @@
 				text-align: center;
 			}
 
+			html {
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+
+			body {
+				background: #dec471; /* Old browsers */
+				background: -moz-radial-gradient(center, ellipse cover, #dec471 0%, #a18750 100%); /* FF3.6+ */
+				background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#dec471), color-stop(100%,#a18750)); /* Chrome,Safari4+ */
+				background: -webkit-radial-gradient(center, ellipse cover, #dec471 0%,#a18750 100%); /* Chrome10+,Safari5.1+ */
+				background: -o-radial-gradient(center, ellipse cover, #dec471 0%,#a18750 100%); /* Opera 12+ */
+				background: -ms-radial-gradient(center, ellipse cover, #dec471 0%,#a18750 100%); /* IE10+ */
+				background: radial-gradient(ellipse at center, #dec471 0%,#a18750 100%); /* W3C */
+				filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dec471', endColorstr='#a18750',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+			}
+
 			canvas {
 				border: 4px solid black;
 				background-color: #dec471;
 			}
 
+			#contain {
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				font-family: sans-serif;
+			}
+
 			#help {
 				text-align: center;
+				margin-top: 1em;
 			}
 		</style>
 	</head>
 	<body>
 		<div id="contain">
 			<canvas id="game" width="1024" height="768"></canvas>
+			<div id="help">
+				Help the townsfolk build a village - OR A GRAVEYARD!<br />
+			</div>
 		</div>
-		<div id="checko"></div>
 	</body>
 </html>
