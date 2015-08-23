@@ -77,6 +77,14 @@ proto.update = function(dt) {
 		}
 		this.sprite.rotation = this.angle * 180 / Math.PI;
 	}
+	this.rotation = this.sprite.rotation;
+};
+
+proto.recoil = function(srcx, srcy) {
+	this.speed *= 0.3;
+	var dx = this.x - srcx;
+	var dy = this.y - srcy;
+	this.angle = Math.atan2(dy, dx);
 };
 
 var BodySegment = function(follow, jewel) {
@@ -84,14 +92,14 @@ var BodySegment = function(follow, jewel) {
 	this.jewel = jewel;
 	this.abovegroundanimation = "body";
 	if(jewel) {
-		this.abovegroundanimation = "jewel";
+		this.abovegroundanimation = "brambles";
 	}
 	this.sprite = game.makesprite(this, "rumble");
 	this.shadow = game.makesprite(this, "shadow");
 	this.x = follow.x;
 	this.y = follow.y;
 	this.z = follow.z;
-	this.rotation = 0;
+	this.rotation = follow.rotation;
 	this.followframes = [];
 	this.followframes.push([follow.x, follow.y, follow.z, follow.rotation]);
 };
@@ -122,11 +130,11 @@ BodySegment.prototype.update = function(dt) {
 		this.shadow.visible = true;
 		this.shadow.x = this.x;
 		this.shadow.y = this.y;
-		//this.sprite.rotation = this.angle * 180 / Math.PI;
+		this.sprite.rotation = this.rotation;
 	}
 
 	if(this.oldz > 0 && this.z <= 0 && this.jewel) {
-		game.addentity(new Resource(this.x, this.y, "gems"));
+		game.addentity(new Resource(this.x, this.y, "seeds"));
 	}
 };
 

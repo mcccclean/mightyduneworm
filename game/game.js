@@ -47,10 +47,45 @@ var TownHall = function() {
 	this.timer = 1;
 	this.timermax = 1;
 	this.resources = {
-		log: 0
+		log: 2
 	};
 	this.constructions = 0;
+	this.displayresources();
 };
+TownHall.prototype.makeconstruction = function(type) {
+	var ring = Math.floor(this.constructions / 5);
+	var ringidx = this.constructions % 5;
+	var factor = 1;
+	if(ring % 2) { factor = -1; }
+	var angle = ringidx * Math.PI * 2 / 5 - factor * Math.PI * 0.5;
+	var radius = 250 * (ring + 1);
+	var p = polar(angle, radius); 
+	console.log(ring, ringidx, angle, radius, p.x, p.y);
+	game.addentity(new Construction(p.x, p.y, type));
+	this.constructions++;
+};
+TownHall.prototype.makenearby = function(type) {
+	var p = null;
+	var tries = 0;
+	while(p == null) {
+		var th = Math.random() * Math.PI * 2;
+		var r = 200 + Math.random()*100 + tries*50;
+		p = polar(th, r);
+		for(var i = 0; p != null && i < game.entities.length; ++i) {
+			var e = game.entities[i];
+			if(distance(p.x, p.y, e.x, e.y) < 100) {
+				p = null;
+			}
+		}
+		tries++;
+	}
+	BUILDS = {
+		seed: function(x, y) { game.addentity(new Seed(p.x, p.y)); }
+	};
+
+	BUILDS[type](p.x, p.y);
+};
+
 TownHall.prototype.update = function(dt) {
 	this.timer -= dt * 0.2;
 	this.hand.rotation = (this.timer/this.timermax) * -360;
@@ -60,34 +95,56 @@ TownHall.prototype.update = function(dt) {
 		game.addentity(new Man(0, 100));
 	}
 
-	if(this.resources['log'] >= 3) {
-		this.resources['log'] -= 3;
-		var ring = Math.floor(this.constructions / 5);
-		var ringidx = this.constructions % 5;
-		var factor = 1;
-		if(ring % 2) { factor = -1; }
-		var angle = ringidx * Math.PI * 2 / 5 - factor * Math.PI * 0.5;
-		var radius = 250 * (ring + 1);
-		var p = polar(angle, radius); 
-		console.log(ring, ringidx, angle, radius, p.x, p.y);
-		game.addentity(new Construction(p.x, p.y));
-		this.constructions++;
-	}
+	var BUILDINGS = {
+		'house': { resource: 'log', cost: 3, construction: true },
+		'wall': { resource: 'stone', cost: 5, construction: true },
+		'seed': { resource: 'seeds', cost: 4, construction: false },
+		'grave': { resource: 'skull', cost: 3, construction: true },
+	};
+
+	for(var type in BUILDINGS) {
+		var cost = BUILDINGS[type].cost;
+		var res = BUILDINGS[type].resource;
+		if(this.resources[res] >= cost) {
+			this.resources[res] -= cost;
+			this.displayresources();
+			if(BUILDINGS[type].construction) {
+				this.makeconstruction(type);
+			} else {
+				this.makenearby(type);		
+			}
+		}
+	};
 }
-TownHall.prototype.collide = function(worm) {}
+TownHall.prototype.collide = function(worm) { worm.recoil(this.x, this.y); }
 TownHall.prototype.work = function(man, dt) {
 	man.workleft -= dt;
 	if(man.workleft <= 0) {
 		var old = this.resources[man.carrying] || 0;
 		this.resources[man.carrying] = old + 1;
 		man.carrying = null;
-		$("#checkos").html(this.resources);
+		this.displayresources();
 		return true;
 	}
-}
+};
+TownHall.prototype.displayresources = function() {
+	var resdisplay = game.resourcedisplay;
+	resdisplay.removeAllChildren();
+	var yidx = 0;
+	for(var type in this.resources) {
+		var amt = this.resources[type];
+		for(var i = 0; i < amt; ++i) {
+			var s = new createjs.Sprite(game.sheet, type);
+			s.y = yidx * 40;
+			resdisplay.addChild(s);
+			yidx++;
+		}
+	};
+};
 
-var Construction = function(x, y) {
-	this.sprite = game.makesprite(this, "construction");	
+var Construction = function(x, y, type) {
+	this.type = type;
+	this.sprite = game.makesprite(this, "con_" + type);	
 	this.x = x;
 	this.y = y;
 	this.z = 0.01;
@@ -102,20 +159,20 @@ Construction.prototype.work = function(man, dt) {
 	this.workleft -= dt;
 	if(this.workleft < 0) {
 		console.log(this);
-		game.addentity(new House(this.x, this.y));
+		game.addentity(new House(this.x, this.y, this.type));
 		this.destroyed = true;
 		return true;
 	}
 }
 
-var House = function(x, y) {
-	this.sprite = game.makesprite(this, "house");	
+var House = function(x, y, type) {
+	this.sprite = game.makesprite(this, type);	
 	this.x = x;
 	this.y = y;
 	this.z = 0;
 };
 House.prototype.update = function(dt) {}
-House.prototype.collide = function(worm) {}
+House.prototype.collide = function(worm) { worm.recoil(this.x, this.y); }
 
 var Rock = function(x, y) {
 	this.sprite = game.makesprite(this, "rock");	
@@ -134,7 +191,7 @@ Rock.prototype.collide = function(worm) {
 		this.destroyed = true;
 		game.addentity(new Resource(this.x, this.y, "stone"));
 	} else if(this.brokentimer <= 0) {
-		worm.speed = 0;
+		worm.recoil(this.x, this.y);
 		this.brokentimer = 1;
 	}
 };
@@ -163,7 +220,7 @@ Tree.prototype.collide = function(worm) {
 		this.destroyed = true;
 		game.addentity(new Resource(this.x, this.y, "log"));
 	} else if(this.brokentimer <= 0) {
-		worm.speed = 0;
+		worm.recoil(this.x, this.y);
 		this.topple();
 	}
 };
@@ -221,7 +278,17 @@ $(function() {
 	game.stage.addChild(group);
 	game.scene = group;
 
+	var resources = new createjs.Container();
+	game.resourcedisplay = resources;
+	resources.x = game.stage.canvas.width / 2 - 40;
+	resources.y = -game.stage.canvas.height / 2 + 60;
+	resources.scaleX = 0.5;
+	resources.scaleY = 0.5;
+	game.stage.addChild(resources);
+
 	game.sheet = new createjs.SpriteSheet(SPRITES);
+
+	resources.addChild(new createjs.Sprite(game.sheet, "log"));
 
 	game.stage.update();
 
