@@ -14,7 +14,7 @@
 				text-align: center;
 			}
 
-			html {
+			html, body {
 				height: 100%;
 				margin: 0;
 				padding: 0;
@@ -32,30 +32,14 @@
 			}
 
 			canvas {
-				border: 4px solid black;
 				background-color: #dec471;
+				margin: auto;
+				display: block;
 			}
 
-			#contain {
-				position: fixed;
-				top: 50%;
-				left: 50%;
-				transform: translate(-50%, -50%);
-				font-family: sans-serif;
-			}
-
-			#help {
-				text-align: center;
-				margin-top: 1em;
-			}
 		</style>
 	</head>
 	<body onload="start()">
-		<div id="contain">
-			<canvas id="game" width="1024" height="768"></canvas>
-			<div id="help">
-				Help the townsfolk build a village - OR A GRAVEYARD!<br />
-			</div>
-		</div>
+		<canvas id="game" width="1024" height="768"></canvas>
 	</body>
 </html>
