@@ -272,7 +272,7 @@ Seed.prototype.work = function(man, dt) {
 }
 
 function loadSounds() {
-	var ext = ".wav";
+	var ext = ".mp3";
 	var reg = function(name) {
 		createjs.Sound.registerSound("sfx/" + name + ext, name);
 	};
