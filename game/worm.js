@@ -13,6 +13,7 @@ var Worm = function() {
 	this.sprite = game.makesprite(this, "rumble");
 	this.sprite.x = this.x;
 	this.sprite.y = this.y;
+	this.lastobstacle = 0;
 
 	this.follows = [];
 	var lastfollow = this;
@@ -28,6 +29,8 @@ proto.update = function(dt) {
 	var TURN = 4;
 	if(this.z > 1)
 		TURN = 0.5;
+
+	this.lastobstacle -= dt;
 
 	if(KEYS[LEFT])
 		this.angle -= dt * TURN;
@@ -89,7 +92,10 @@ proto.recoil = function(srcx, srcy) {
 	var dx = this.x - srcx;
 	var dy = this.y - srcy;
 	this.angle = Math.atan2(dy, dx);
-	playSound("obstacle");
+	if(this.lastobstacle < 0) {
+		playSound("obstacle");
+		this.lastobstacle = 0.5;
+	}
 };
 
 var BodySegment = function(follow, jewel) {

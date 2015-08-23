@@ -299,70 +299,32 @@ function playSound(name) {
 	createjs.Sound.play(name);
 };
 
-$(function() {
-	loadSounds();
+game.reset = function() {
+	game.resourcedisplay.alpha = 1;
+	game.endgamescreen.alpha = 0;
+	game.endgamescreen.visible = false;
 
-	game.paused = true;
-	game.stage = new createjs.Stage("game");
-	game.stage.x = game.stage.canvas.width / 2;
-	game.stage.y = game.stage.canvas.height / 2;
+	game.endgametime = 0;
 
-	var MAPW = game.stage.canvas.width * 2;
-	var MAPH = game.stage.canvas.height * 2;
+	// RESET SPRITE DISPLAYS
+	game.scene.removeAllChildren();
+	game.resourcedisplay.removeAllChildren();
 
-	var group = new createjs.Container();
-	group.scaleX = 0.5;
-	group.scaleY = 0.5;
-	game.stage.addChild(group);
-	game.scene = group;
-
-	var resources = new createjs.Container();
-	game.resourcedisplay = resources;
-	resources.x = game.stage.canvas.width / 2 - 40;
-	resources.y = -game.stage.canvas.height / 2 + 60;
-	resources.scaleX = 0.5;
-	resources.scaleY = 0.5;
-	game.stage.addChild(resources);
-
-	var pausescreen = new createjs.Container();
-	game.stage.addChild(pausescreen);
-	var dark = new createjs.Bitmap("dark.png");
-	dark.x = -1024*0.5;
-	dark.y = -113;
-	dark.scaleX = 100;
-	dark.scaleY = 30;
-	pausescreen.addChild(dark);
-	var longline = new createjs.Bitmap("longline.png");
-	longline.x = 1024 * -0.5;
-	longline.y = 120;
-	pausescreen.addChild(longline);
-	var longline2 = new createjs.Bitmap("longline.png");
-	longline2.x = 1024 * -0.5;
-	longline2.y = -120;
-	pausescreen.addChild(longline2);
-	var instructions = new createjs.Bitmap("instructions.png");
-	instructions.x = 291 * -0.5;
-	instructions.y = -30;
-	pausescreen.addChild(instructions);
-	var logo = new createjs.Bitmap("title.png");
-	logo.x = -400;
-	logo.y = -200;
-	pausescreen.addChild(logo);
-	game.pausescreen = pausescreen;
-
-	game.sheet = new createjs.SpriteSheet(SPRITES);
-
-	resources.addChild(new createjs.Sprite(game.sheet, "log"));
-
+	// RESEST GAME STATE
 	game.entities = [];
 	game.newentities = [];
 	game.mancount = 0;
+
+	// INITIAL SETUP & PLACEMENT
+	
+	// CORE OBJECTS
 	game.worm = new Worm();
 	game.addentity(game.worm);
 
 	game.townhall = new TownHall();
 	game.addentity(game.townhall);
 
+	// OTHER OBJECTS
 	var randoms = [];
 	var placerandom = function(amount, cb) {
 		for(var i = 0; i < amount; ++i) {
@@ -398,11 +360,83 @@ $(function() {
 		i++;
 	};
 
+	// RESET INPUTS
 	for(var i = 0; i < 256; ++i) {
 		KEYS[i] = false;
 	}
+};
+
+$(function() {
 
 	createjs.Ticker.setFPS(30);
+
+	// BEGIN LOADING ASSETS
+	loadSounds();
+	game.sheet = new createjs.SpriteSheet(SPRITES);
+
+	// MAIN INTERFACE
+	game.stage = new createjs.Stage("game");
+	game.stage.x = game.stage.canvas.width / 2;
+	game.stage.y = game.stage.canvas.height / 2;
+
+	var MAPW = game.stage.canvas.width * 2;
+	var MAPH = game.stage.canvas.height * 2;
+
+	// SETUP SPRITE LAYER
+	var group = new createjs.Container();
+	group.scaleX = 0.5;
+	group.scaleY = 0.5;
+	game.stage.addChild(group);
+	game.scene = group;
+
+	// SETUP HUD LAYER
+	var resources = new createjs.Container();
+	game.resourcedisplay = resources;
+	resources.x = game.stage.canvas.width / 2 - 40;
+	resources.y = -game.stage.canvas.height / 2 + 60;
+	resources.scaleX = 0.5;
+	resources.scaleY = 0.5;
+	game.stage.addChild(resources);
+
+	// SETUP PAUSE LAYER
+	var pausescreen = new createjs.Container();
+	game.stage.addChild(pausescreen);
+	var dark = new createjs.Bitmap("dark.png");
+	dark.x = -1024*0.5;
+	dark.y = -113;
+	dark.scaleX = 100;
+	dark.scaleY = 30;
+	pausescreen.addChild(dark);
+	var longline = new createjs.Bitmap("longline.png");
+	longline.x = 1024 * -0.5;
+	longline.y = 120;
+	pausescreen.addChild(longline);
+	var longline2 = new createjs.Bitmap("longline.png");
+	longline2.x = 1024 * -0.5;
+	longline2.y = -120;
+	pausescreen.addChild(longline2);
+	var instructions = new createjs.Bitmap("instructions.png");
+	instructions.x = 291 * -0.5;
+	instructions.y = -30;
+	pausescreen.addChild(instructions);
+	var logo = new createjs.Bitmap("title.png");
+	logo.x = -400;
+	logo.y = -200;
+	pausescreen.addChild(logo);
+	game.pausescreen = pausescreen;
+
+	// SETUP ENDGAME LAYER
+	var endgamescreen = new createjs.Bitmap("endscreen.png");
+	endgamescreen.x = -400;
+	endgamescreen.y = -100;
+	endgamescreen.visible = false;
+	endgamescreen.alpha = 0;
+	game.stage.addChild(endgamescreen);
+	game.endgamescreen = endgamescreen;
+
+	game.paused = true;
+
+	game.reset();
 });
 
 game.makesprite = function(entity, name) {
@@ -439,17 +473,24 @@ game.getclosest = function(x, y, pred) {
 
 KEYS = {};
 $(window).keydown(function(e) {
-	if(game.paused) {
-		if(e.keyCode == 32) {
+	if(game.endgametime > 0) {
+		if(e.keyCode == 32 && game.endgametime > 3) {
+			game.reset();
 			game.paused = false;
 		}
 	} else {
-		KEYS[e.keyCode] = true;
-	}
+		if(game.paused) {
+			if(e.keyCode == 32) {
+				game.paused = false;
+			}
+		} else {
+			KEYS[e.keyCode] = true;
+		}
 
-	if(e.keyCode == 27) {
-		if(!game.paused) { playSound("pause"); }
-		game.paused = !game.paused;
+		if(e.keyCode == 27) {
+			if(!game.paused) { playSound("pause"); }
+			game.paused = !game.paused;
+		}
 	}
 });
 $(window).keyup(function(e) {
@@ -461,11 +502,23 @@ createjs.Ticker.addEventListener("tick", function() {
 	game.pausescreen.visible = game.paused;
 	if(game.paused) {
 		
+	} else if (game.endgametime > 0) {
+		game.endgametime += dt;
+		game.endgamescreen.alpha = Math.min(1, game.endgametime / 3);
+		game.resourcedisplay.alpha = 1 - Math.min(1, game.endgametime / 3);
 	} else {
 		game.update(dt);
 	}
 	game.stage.update();
 });
+
+game.checkendgame = function() {
+	if(Math.abs(game.worm.x) > 3500 || Math.abs(game.worm.y) > 3000) {
+		game.endgamescreen.visible = true;
+		game.endgamescreen.alpha = 0;
+		game.endgametime += 0.01;
+	}
+};
 
 game.update = function(dt) {
 	game.entities = game.entities.concat(game.newentities);
@@ -482,6 +535,8 @@ game.update = function(dt) {
 			return true;
 		}
 	});
+
+	game.checkendgame();
 
 	var MAXZOOM = 0.8;
 
