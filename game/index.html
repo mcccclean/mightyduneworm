@@ -2,7 +2,6 @@
 <html>
 	<head>
 		<title>Mighty Dune Worm</title>
-		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 		<script src="https://code.createjs.com/createjs-2015.05.21.min.js"></script>
 		<script src="sprites.js"></script>
 		<script src="worm.js"></script> 
@@ -51,7 +50,7 @@
 			}
 		</style>
 	</head>
-	<body>
+	<body onload="start()">
 		<div id="contain">
 			<canvas id="game" width="1024" height="768"></canvas>
 			<div id="help">

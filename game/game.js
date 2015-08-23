@@ -366,7 +366,7 @@ game.reset = function() {
 	}
 };
 
-$(function() {
+function start() {
 
 	createjs.Ticker.setFPS(30);
 
@@ -436,8 +436,36 @@ $(function() {
 
 	game.paused = true;
 
+	// INPUT HANDLING
+	document.onkeydown = function(e) {
+		console.log('e');
+		if(game.endgametime > 0) {
+			if(e.keyCode == 32 && game.endgametime > 3) {
+				game.reset();
+				game.paused = false;
+			}
+		} else {
+			if(game.paused) {
+				if(e.keyCode == 32) {
+					game.paused = false;
+				}
+			} else {
+				KEYS[e.keyCode] = true;
+			}
+
+			if(e.keyCode == 27) {
+				if(!game.paused) { playSound("pause"); }
+				game.paused = !game.paused;
+			}
+		}
+	};
+
+	document.onkeyup = function(e) {
+		KEYS[e.keyCode] = false;
+	};
+
 	game.reset();
-});
+};
 
 game.makesprite = function(entity, name) {
 	var sprite = new createjs.Sprite(game.sheet, name);
@@ -472,30 +500,6 @@ game.getclosest = function(x, y, pred) {
 };
 
 KEYS = {};
-$(window).keydown(function(e) {
-	if(game.endgametime > 0) {
-		if(e.keyCode == 32 && game.endgametime > 3) {
-			game.reset();
-			game.paused = false;
-		}
-	} else {
-		if(game.paused) {
-			if(e.keyCode == 32) {
-				game.paused = false;
-			}
-		} else {
-			KEYS[e.keyCode] = true;
-		}
-
-		if(e.keyCode == 27) {
-			if(!game.paused) { playSound("pause"); }
-			game.paused = !game.paused;
-		}
-	}
-});
-$(window).keyup(function(e) {
-	KEYS[e.keyCode] = false;
-});
 
 createjs.Ticker.addEventListener("tick", function() {
 	var dt = 1.0/30;
