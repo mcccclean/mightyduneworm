@@ -1,7 +1,7 @@
 import json
 import os
 
-CENTERS = """rumble shadow stone jewel gems log head body""".split()
+CENTERS = """rumble shadow brambles seeds stone jewel gems log head body skull""".split()
 
 def commas(s):
     return tuple([int(x.strip()) for x in s.split(',')])
@@ -48,7 +48,7 @@ def main(infile, outfile):
     for i, s in enumerate(sorted([x for x in sprites if x.valid], key=lambda s: "{}_{}".format(s.name, s.idx))):
         s.idx = i
         frames.append(s.data)
-        name = s.name.split("_")[0]
+        name = s.name
         if name not in animations:
             animations[name] = { 'frames': [s.idx], 'speed': 0.25 }
         else:

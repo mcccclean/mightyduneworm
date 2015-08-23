@@ -336,10 +336,6 @@ $(function() {
 		i++;
 	};
 
-	for(var i = 0; i < 3; ++i) {
-		game.addentity(new Man(-150 + i*150, 150));
-	};
-
 	for(var i = 0; i < 256; ++i) {
 		KEYS[i] = false;
 	}
@@ -382,7 +378,6 @@ game.getclosest = function(x, y, pred) {
 KEYS = {};
 $(window).keydown(function(e) {
 	KEYS[e.keyCode] = true;
-	$("#checkos").html(e.keyCode);
 });
 $(window).keyup(function(e) {
 	KEYS[e.keyCode] = false;
