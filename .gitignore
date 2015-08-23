@@ -2,3 +2,4 @@
 *.jar
 sfx/*.wav
 sfx/convert.sh
+game/;

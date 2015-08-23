@@ -552,12 +552,7 @@ game.update = function(dt) {
 	game.scene.y = game.worm.y * -0.25;
 
 	game.scene.sortChildren(function(a, b) {
-		var dy = a.entity.y - b.entity.y;
-		if(dy == 0) {
-			return b.y - a.y;
-		} else {
-			return dy;
-		}
+		return (a.entity.y - b.entity.y) || (b.y - a.y) || (b.id - a.id);
 	});
 
 };
